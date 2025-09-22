@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-// import analyticsService from '../services/analyticsService';
+import analyticsService from '../services/analyticsService';
 
 const AuthContext = createContext({});
 
@@ -81,13 +81,13 @@ export const AuthProvider = ({ children }) => {
         setIsLoggedIn(true);
 
         // Log login analytics
-        // await analyticsService.logLogin('email');
-        // await analyticsService.setUserProperties(userData.id.toString(), {
-        //   user_name: userData.name,
-        //   user_email: userData.email,
-        //   is_verified: userData.is_verified ? 'true' : 'false',
-        //   social_type: userData.social_type || 'email'
-        // });
+        await analyticsService.logLogin('email');
+        await analyticsService.setUserProperties(userData.id.toString(), {
+          user_name: userData.name,
+          user_email: userData.email,
+          is_verified: userData.is_verified ? 'true' : 'false',
+          social_type: userData.social_type || 'email',
+        });
 
         await completeOnboarding();
         return { success: true };
@@ -129,14 +129,14 @@ export const AuthProvider = ({ children }) => {
         setIsLoggedIn(true);
 
         // Log signup analytics
-        // await analyticsService.logSignUp('email');
-        // await analyticsService.setUserProperties(userData.id.toString(), {
-        //   user_name: userData.name,
-        //   user_email: userData.email,
-        //   is_verified: userData.is_verified ? 'true' : 'false',
-        //   social_type: userData.social_type || 'email',
-        //   refer_code: refer_code || 'none'
-        // });
+        await analyticsService.logSignUp('email');
+        await analyticsService.setUserProperties(userData.id.toString(), {
+          user_name: userData.name,
+          user_email: userData.email,
+          is_verified: userData.is_verified ? 'true' : 'false',
+          social_type: userData.social_type || 'email',
+          refer_code: refer_code || 'none',
+        });
 
         await completeOnboarding();
         return { success: true };

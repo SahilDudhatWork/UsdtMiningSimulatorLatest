@@ -16,7 +16,7 @@ import Header from '../../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { showToast } from '../../utils/toastUtils';
-// import analyticsService from '../../services/analyticsService';
+import analyticsService from '../../services/analyticsService';
 import { useAuth } from '../../context/AuthContext';
 
 export default function ConvertCoinScreen(props) {
@@ -55,7 +55,7 @@ export default function ConvertCoinScreen(props) {
   useEffect(() => {
     const focusListener = navigation.addListener('focus', async () => {
       // Log screen view analytics
-      // await analyticsService.logScreenView('ConvertCoinScreen');
+      await analyticsService.logScreenView('ConvertCoinScreen');
 
       const totalMasterCoin = await AsyncStorage.getItem('masterCoin');
       const totalEarnedValue = await AsyncStorage.getItem('totalEarned');
@@ -107,7 +107,7 @@ export default function ConvertCoinScreen(props) {
       await AsyncStorage.setItem('masterCoin', '0');
 
       // Log coin conversion analytics
-      // await analyticsService.logCoinConversion(masterCoin, convertableAmount);
+      await analyticsService.logCoinConversion(masterCoin, convertableAmount);
 
       // Add to history
       const newHistoryItem = {

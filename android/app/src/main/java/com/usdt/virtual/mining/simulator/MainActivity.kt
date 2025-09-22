@@ -1,4 +1,4 @@
-package com.usdtmining
+package com.usdt.virtual.mining.simulator
 
 import android.os.Bundle
 import com.facebook.react.ReactActivity

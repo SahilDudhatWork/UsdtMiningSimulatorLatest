@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   Share,
 } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { styles } from './styles';
 // import Carousel from 'react-native-snap-carousel';
 import { Colors } from '../../constants/colors';
@@ -30,10 +30,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import CustomStatusBar from '../../components/CustomStatusBar';
 import { showToast } from '../../utils/toastUtils';
-// import analyticsService from '../../services/analyticsService';
+import analyticsService from '../../services/analyticsService';
 
 const MiningScreen = props => {
-  console.log('----MiningScreen----');
   const navigation = useNavigation();
   const [currentOption, setCurrentOption] = useState(0);
   const { user, apiResponse } = useAuth();
@@ -45,6 +44,16 @@ const MiningScreen = props => {
   const [intervalId, setIntervalId] = useState(null);
   const SUPER_COINS_PER_SECOND = 1 / (3 * 60); // 1 Super Coin earned over 3 minutes (180 seconds)
   const MINING_DURATION_MS = 3 * 60 * 1000; // 3 minutes in milliseconds
+
+  // Refs to manage precise timing without causing re-renders
+  const miningIntervalRef = useRef(null);
+  const lastTickRef = useRef(null);
+  const totalEarnedRef = useRef(0);
+
+  // Keep a live ref of totalEarned for accurate persistence on completion
+  useEffect(() => {
+    totalEarnedRef.current = totalEarned;
+  }, [totalEarned]);
 
   // Helper function to convert Super Coins to USDT
   const convertToUSDT = superCoins => {
@@ -230,17 +239,31 @@ const MiningScreen = props => {
   }, []);
 
   useEffect(() => {
+    // Start or stop the mining interval based on isMining state
     if (isMining && timeRemaining > 0) {
-      const miningIntervalId = setInterval(async () => {
-        setTotalEarned(prev => {
-          const newTotalEarned = prev + SUPER_COINS_PER_SECOND;
-          return newTotalEarned;
-        });
+      // Clear any existing interval to avoid duplicates
+      if (miningIntervalRef.current) {
+        clearInterval(miningIntervalRef.current);
+        miningIntervalRef.current = null;
+      }
+
+      // Initialize last tick to now
+      lastTickRef.current = Date.now();
+
+      // Use a 1s heartbeat but compute real delta for accuracy
+      miningIntervalRef.current = setInterval(() => {
+        const now = Date.now();
+        const deltaMs = now - (lastTickRef.current || now);
+        lastTickRef.current = now;
+
+        // Accumulate earnings based on real time elapsed
+        const earnedDelta = SUPER_COINS_PER_SECOND * (deltaMs / 1000);
+        setTotalEarned(prev => prev + earnedDelta);
 
         setTimeRemaining(prev => {
-          const newTimeRemaining = prev - 1000;
-          if (newTimeRemaining <= 0) {
-            const roundedTotalEarned = Math.round(totalEarned);
+          const next = prev - deltaMs;
+          if (next <= 0) {
+            const roundedTotalEarned = Math.round(totalEarnedRef.current);
             console.log(
               'Mining session completed. Total Earned:',
               roundedTotalEarned.toString(),
@@ -249,25 +272,27 @@ const MiningScreen = props => {
             AsyncStorage.removeItem('sessionStart');
             AsyncStorage.removeItem('boostedEndTime'); // Remove boosted time when mining completes
             setIsMining(false);
-            setTimeRemaining(0);
-            clearInterval(miningIntervalId);
-
-            // Log mining completed analytics
-            // analyticsService.logMiningCompleted(
-            //   MINING_DURATION_MS / 1000, // duration in seconds
-            //   1, // coins earned (1 Super Coin per session)
-            //   convertToUSDT(1) // USDT equivalent
-            // );
+            // Clear interval and reset refs
+            if (miningIntervalRef.current) {
+              clearInterval(miningIntervalRef.current);
+              miningIntervalRef.current = null;
+            }
+            return 0;
           }
-          return newTimeRemaining;
+          // console.log('Time remaining:', next);
+          return next;
         });
-      }, 1000); // Update earnings every second
-
-      setIntervalId(miningIntervalId);
+      }, 1000);
     }
 
-    return () => clearInterval(intervalId);
-  }, [isMining, timeRemaining]);
+    // Cleanup on unmount or when isMining becomes false
+    return () => {
+      if (miningIntervalRef.current) {
+        clearInterval(miningIntervalRef.current);
+        miningIntervalRef.current = null;
+      }
+    };
+  }, [isMining]);
   // Load previous state from AsyncStorage
   useEffect(() => {
     const loadState = async () => {
@@ -322,8 +347,9 @@ const MiningScreen = props => {
     loadState();
 
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
+      if (miningIntervalRef.current) {
+        clearInterval(miningIntervalRef.current);
+        miningIntervalRef.current = null;
       }
     };
   }, []);
@@ -376,8 +402,8 @@ const MiningScreen = props => {
         setTimeRemaining(MINING_DURATION_MS);
 
         // Log mining started analytics
-        // await analyticsService.logMiningStarted('default');
-        // await analyticsService.logScreenView('MiningScreen');
+        await analyticsService.logMiningStarted('default');
+        await analyticsService.logScreenView('MiningScreen');
       }
     } catch (error) {
       console.error(error);
@@ -1038,25 +1064,6 @@ const MiningScreen = props => {
                   </Pressable>
                 </View>
               </View>
-              {/* <FlatList
-                data={OptionIcon}
-                style={{ marginTop: 10, alignSelf: 'center' }}
-                horizontal
-                renderItem={({ item, index }) => (
-                  <View
-                    style={{
-                      padding: 3,
-                      backgroundColor:
-                        index == currentOption
-                          ? Colors.secondaryColor
-                          : '#c4cfdd',
-                      margin: 3,
-                      width: index == currentOption ? 30 : 4,
-                      borderRadius: 5,
-                    }}
-                  ></View>
-                )}
-              /> */}
             </View>
           </View>
         </ScrollView>

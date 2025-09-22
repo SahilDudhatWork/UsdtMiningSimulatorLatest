@@ -4,7 +4,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
 // import notificationService from './src/services/notificationService';
 // import multiAdManager from './src/utils/multiAdManager';
-// import analyticsService from './src/services/analyticsService';
+import analyticsService from './src/services/analyticsService';
 
 export default function App() {
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function App() {
     LogBox.ignoreAllLogs();
 
     // Initialize Firebase Analytics
-    // analyticsService.initialize();
+    analyticsService.initialize();
 
     // Initialize Enhanced Ad Manager (supports Google, Facebook, AppLovin)
     // multiAdManager.initializeAds();
@@ -22,14 +22,14 @@ export default function App() {
     // notificationService.initialize('f7e64952-2dc0-4e11-9487-088657609018');
 
     // Log app opened event
-    // analyticsService.logAppOpened();
+    analyticsService.logAppOpened();
 
     // Handle app state changes for analytics
     const handleAppStateChange = nextAppState => {
       if (nextAppState === 'background') {
-        // analyticsService.logAppBackgrounded();
+        analyticsService.logAppBackgrounded();
       } else if (nextAppState === 'active') {
-        // analyticsService.logAppOpened();
+        analyticsService.logAppOpened();
       }
     };
 

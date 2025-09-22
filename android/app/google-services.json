@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "340751046508",
+    "project_id": "usdt-virtual-mining-simulator",
+    "storage_bucket": "usdt-virtual-mining-simulator.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340751046508:android:456e76bd8a339b36cc0549",
+        "android_client_info": {
+          "package_name": "com.usdt.virtual.mining.simulator"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLDGaidiRyxPCONBu2ce43irn-E9r-unM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
